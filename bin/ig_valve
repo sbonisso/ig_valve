@@ -1,9 +1,7 @@
 #!/usr/bin/env ruby
 
-require_relative 'load_helper'
 require 'thor'
 require 'csv'
-#require 'evaluate_labels'
 require 'ig_valve'
 
 def pretty_print_mat(h, seg)
