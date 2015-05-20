@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-#require_relative 'load_helper'
+require_relative 'load_helper'
 require 'thor'
 require 'csv'
 #require 'evaluate_labels'
@@ -28,7 +28,7 @@ def print_mat(h, seg, outfile)
   end
 end
 
-class VALVE < Thor
+class IGVALVE < Thor
   class_option :file,
                :aliases => "-f",
                :desc => "specifiy a file with paths to prediction files",
@@ -88,9 +88,8 @@ class VALVE < Thor
         pretty_print_mat(h, :CDR3)
       end
     else
-      #if options["type"] != "cdr3" then
+      outfile = options["output"].split(/\.csv$/)[0]
       if ["gene", "allele", "partition"].include?(options["type"]) then
-        outfile = options["output"].split(/\.csv$/)[0]
         print_mat(h, :V, outfile + "_V.csv")
         print_mat(h, :D, outfile + "_D.csv")
         print_mat(h, :J, outfile + "_J.csv")
@@ -171,4 +170,4 @@ class VALVE < Thor
 
 end
 
-VALVE.start(ARGV)
+IGVALVE.start(ARGV)

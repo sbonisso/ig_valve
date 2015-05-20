@@ -5,28 +5,31 @@ require 'tempfile'
 require 'fileutils'
 require 'open3'
 
+
 module IgValve
-  #
-  # module for mix-ins for comparing two VDJ predictions
-  #
+#
+# module for mix-ins for comparing two VDJ predictions
+#
   module CompareAbs
     #
     #
     def is_label_pred?(obj)
       obj.class == LabelPrediction
     end
+
     #
-    # check if gene predictions are the same for 
-    #  
+    # check if gene predictions are the same for
+    #
     def cmp_genes(pred1, pred2)
       raise 'not a LabelPrediction object' if !is_label_pred?(pred1)
       {:V => (pred1.get_v_genes & pred2.get_v_genes).size > 0,
-        :D => (pred1.get_d_genes & pred2.get_d_genes).size > 0,
-        :J => (pred1.get_j_genes & pred2.get_j_genes).size > 0,
-        :total => (((pred1.get_v_genes & pred2.get_v_genes).size > 0) &
-                   ((pred1.get_d_genes & pred2.get_d_genes).size > 0) &
-                   ((pred1.get_j_genes & pred2.get_j_genes).size > 0))}
+       :D => (pred1.get_d_genes & pred2.get_d_genes).size > 0,
+       :J => (pred1.get_j_genes & pred2.get_j_genes).size > 0,
+       :total => (((pred1.get_v_genes & pred2.get_v_genes).size > 0) &
+           ((pred1.get_d_genes & pred2.get_d_genes).size > 0) &
+           ((pred1.get_j_genes & pred2.get_j_genes).size > 0))}
     end
+
     #
     def cmp_genes_i(pred1, pred2)
       raise 'not a LabelPrediction object' if !is_label_pred?(pred1)
@@ -39,26 +42,28 @@ module IgValve
       # }
       th = cmp_genes(pred1, pred2)
       {:V => (th[:V] ? 1 : 0),
-        :D => (th[:D] ? 1 : 0),
-        :J => (th[:J] ? 1 : 0),
-        :total => (th[:total] ? 1 : 0) 
+       :D => (th[:D] ? 1 : 0),
+       :J => (th[:J] ? 1 : 0),
+       :total => (th[:total] ? 1 : 0)
       }
     end
+
     #
     #
-    #    
+    #
     def cmp_alleles(pred1, pred2)
       raise 'not a LabelPrediction object' if !is_label_pred?(pred1)
       {:V => (pred1.get_v_alleles & pred2.get_v_alleles).size > 0,
-        :D => (pred1.get_d_alleles & pred2.get_d_alleles).size > 0,
-        :J => (pred1.get_j_alleles & pred2.get_j_alleles).size > 0,
-        :total => (((pred1.get_v_alleles & pred2.get_v_alleles).size > 0) &
-                   ((pred1.get_d_alleles & pred2.get_d_alleles).size > 0) &
-                   ((pred1.get_j_alleles & pred2.get_j_alleles).size > 0))
+       :D => (pred1.get_d_alleles & pred2.get_d_alleles).size > 0,
+       :J => (pred1.get_j_alleles & pred2.get_j_alleles).size > 0,
+       :total => (((pred1.get_v_alleles & pred2.get_v_alleles).size > 0) &
+           ((pred1.get_d_alleles & pred2.get_d_alleles).size > 0) &
+           ((pred1.get_j_alleles & pred2.get_j_alleles).size > 0))
       }
     end
+
     #
-    def cmp_alleles_i(pred1, pred2) 
+    def cmp_alleles_i(pred1, pred2)
       raise 'not a LabelPrediction object' if !is_label_pred?(pred1)
       # {:V => ((pred1.get_v_alleles & pred2.get_v_alleles).size > 0 ? 1 : 0),
       #   :D => ((pred1.get_d_alleles & pred2.get_d_alleles).size > 0 ? 1 : 0),
@@ -70,36 +75,39 @@ module IgValve
       th = cmp_alleles(pred1, pred2)
       #puts th
       {:V => (th[:V] ? 1 : 0),
-        :D => (th[:D] ? 1 : 0),
-        :J => (th[:J] ? 1 : 0),
-        :total => (th[:total] ? 1 : 0) 
+       :D => (th[:D] ? 1 : 0),
+       :J => (th[:J] ? 1 : 0),
+       :total => (th[:total] ? 1 : 0)
       }
     end
+
     #
     #
-    #  
+    #
     def cmp_partitions(pred1, pred2)
       {:V => jaccard(pred1.get_v_partition,
                      pred2.get_v_partition),
-        :D => jaccard(pred1.get_d_partition,
-                      pred2.get_d_partition),
-        :J => jaccard(pred1.get_j_partition,
-                      pred2.get_j_partition),
-        :total => jaccard(pred1.get_v_partition | 
-                          pred1.get_d_partition | 
-                          pred1.get_j_partition,
-                          pred2.get_v_partition | 
-                          pred2.get_d_partition | 
-                          pred2.get_j_partition)
-      }  
+       :D => jaccard(pred1.get_d_partition,
+                     pred2.get_d_partition),
+       :J => jaccard(pred1.get_j_partition,
+                     pred2.get_j_partition),
+       :total => jaccard(pred1.get_v_partition |
+                             pred1.get_d_partition |
+                             pred1.get_j_partition,
+                         pred2.get_v_partition |
+                             pred2.get_d_partition |
+                             pred2.get_j_partition)
+      }
     end
+
     #
     #
     #
     def cmp_cdr3(pred1, pred2)
       raise 'not a LabelPrediction object' if !is_label_pred?(pred1)
-      {:CDR3 => ((pred1.get_cdr3 == pred2.get_cdr3) ? 1 : 0) }
+      {:CDR3 => ((pred1.get_cdr3 == pred2.get_cdr3) ? 1 : 0)}
     end
+
     #
     # compare clones as comparing multisets across the dataset using Tanimoto similarity,
     #
@@ -115,14 +123,16 @@ module IgValve
       # compute T(A,B)
       {:clone => self.jaccard_multi(pred_ms, truth_ms)}
     end
+
     #
-    # compute Jaccard coefficient given two sets, e.g., two arrays 
+    # compute Jaccard coefficient given two sets, e.g., two arrays
     # of partitions
     # J(A,B) = \frac{ |A \wedge B| }{ |A \cup B| }
     #
     def jaccard(set_a, set_b)
-      (set_a & set_b).size.to_f / (set_a | set_b).size.to_f   
+      (set_a & set_b).size.to_f / (set_a | set_b).size.to_f
     end
+
     #
     # compute Jaccard similarity given two multiset objects
     #
@@ -133,6 +143,7 @@ module IgValve
       denom = (mset_a | mset_b).size
       (numerator / denom.to_f)
     end
+
     #
     # given a prediction file, returh a hash of:
     # CDR3_seq.to_sym => [id_x, id_y, ...]
@@ -151,6 +162,7 @@ module IgValve
       end
       h1
     end
+
     #
 
     # a = two ids in same partition in both A and B
@@ -173,8 +185,8 @@ module IgValve
       adj_f1 = Tempfile.new('ad1')
       h1.each_key do |k|
         id_lst = h1[k]
-        id_lst.each_with_index do |id1,i|
-          id_lst.each_with_index do |id2,j|
+        id_lst.each_with_index do |id1, i|
+          id_lst.each_with_index do |id2, j|
             next if i >= j
             adj_f1.puts [id1, id2].join("\t")
           end
@@ -185,8 +197,8 @@ module IgValve
       adj_f2 = Tempfile.new('ad1')
       h2.each_key do |k|
         id_lst = h2[k]
-        id_lst.each_with_index do |id1,i|
-          id_lst.each_with_index do |id2,j|
+        id_lst.each_with_index do |id1, i|
+          id_lst.each_with_index do |id2, j|
             next if i >= j
             adj_f2.puts [id1, id2].join("\t")
           end
@@ -204,7 +216,7 @@ module IgValve
       `sort #{adj_f2.path} > #{adj2_srt_f.path}`
       adj2_srt_f.close
       cmd = "bash -c 'comm -12 #{adj1_srt_f.path} #{adj2_srt_f.path} | wc -l'"
-      out,err,pip = Open3.capture3(cmd)
+      out, err, pip = Open3.capture3(cmd)
       num_int = out.to_i
       a = num_int
       cmd_c = "bash -c 'comm -23 #{adj1_srt_f.path} #{adj2_srt_f.path} | wc -l'"
@@ -228,17 +240,21 @@ module IgValve
       #puts [a, b, cd, total].join("\t")
       {:a => a, :b => b, :c => c_val, :d => d_val, :total => total, :n_a => num_f1, :n_b => num_f2}
     end
+
     #
     # compute Rand index given two output files, RI(A,B) = (a+b)/(a+b+c+d)
     #
     def rand_index(lbl_f1, lbl_f2)
       h = compute_pair_confusion(lbl_f1, lbl_f2)
-      #
-      # return Rand index (a+b)/(n choose 2)
-      #{:clone => (a+b)/total.to_f }
-      #{:clone => a/(cd+a).to_f}
       puts h
-      {:clone => h[:a]/(h[:c]+h[:d]+h[:a]+h[:b]).to_f}
+      {:clone => (h[:a]+h[:b])/(h[:c]+h[:d]+h[:a]+h[:b]).to_f}
+    end
+    #
+    #
+    #
+    def jaccard_index(lbl_f1, lbl_f2)
+      h = compute_pair_confusion(lbl_f1, lbl_f2)
+      {:clone => h[:a]/(h[:c]+h[:d]+h[:a]).to_f}
     end
     #
     # compute Fowlkes-Mallows index
@@ -248,7 +264,7 @@ module IgValve
       a = h[:a]
       c = h[:c]
       d = h[:d]
-      {:clone => (a/Math.sqrt( (a+c)*(a+d) )) }
+      {:clone => (a/Math.sqrt((a+c)*(a+d)))}
     end
 
   end

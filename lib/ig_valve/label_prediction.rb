@@ -1,7 +1,6 @@
-
 module IgValve
-  #
-  #
+#
+#
   class LabelPrediction
     #
     #
@@ -24,28 +23,56 @@ module IgValve
       if ary.size > 5 then
         #
         # partitions, shown as range x..y
-        @v_part = Range.new(*ary[4].split("..").map{|v| v.to_i})
-        @d_part = Range.new(*ary[5].split("..").map{|v| v.to_i})
-        @j_part = Range.new(*ary[6].split("..").map{|v| v.to_i})
+        @v_part = Range.new(*ary[4].split("..").map { |v| v.to_i })
+        @d_part = Range.new(*ary[5].split("..").map { |v| v.to_i })
+        @j_part = Range.new(*ary[6].split("..").map { |v| v.to_i })
       end
 
     end
-    
-    def get_id() @id end
 
-    def get_v_alleles() @v_preds end
-    def get_d_alleles() @d_preds end
-    def get_j_alleles() @j_preds end
+    def get_id()
+      @id
+    end
 
-    def get_v_genes() @v_preds.map{|v| v.split("*")[0]}.uniq end
-    def get_d_genes() @d_preds.map{|v| v.split("*")[0]}.uniq end 
-    def get_j_genes() @j_preds.map{|v| v.split("*")[0]}.uniq end
+    def get_v_alleles()
+      @v_preds
+    end
 
-    def get_v_partition() @v_part.to_a end
-    def get_d_partition() @d_part.to_a end
-    def get_j_partition() @j_part.to_a end
+    def get_d_alleles()
+      @d_preds
+    end
 
-    def get_cdr3() @cdr3_seq end
+    def get_j_alleles()
+      @j_preds
+    end
+
+    def get_v_genes()
+      @v_preds.map { |v| v.split("*")[0] }.uniq
+    end
+
+    def get_d_genes()
+      @d_preds.map { |v| v.split("*")[0] }.uniq
+    end
+
+    def get_j_genes()
+      @j_preds.map { |v| v.split("*")[0] }.uniq
+    end
+
+    def get_v_partition()
+      @v_part.to_a
+    end
+
+    def get_d_partition()
+      @d_part.to_a
+    end
+
+    def get_j_partition()
+      @j_part.to_a
+    end
+
+    def get_cdr3()
+      @cdr3_seq
+    end
 
   end
 
