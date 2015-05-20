@@ -1,0 +1,174 @@
+#!/usr/bin/env ruby
+
+#require_relative 'load_helper'
+require 'thor'
+require 'csv'
+#require 'evaluate_labels'
+require 'ig_valve'
+
+def pretty_print_mat(h, seg)
+  name_len = h.keys.max { |s| s.size }.size
+  puts ["", " "*name_len, h.keys].flatten.join("\t")
+  h.keys.each do |k1|
+    ary = h.keys.map { |k2| h[k1][k2].nil? ? "" : ('%0.3f'%h[k1][k2][seg]) }
+    puts [k1, (k1.size < name_len ? " "*name_len : ""), ary].flatten.join("\t")
+  end
+end
+
+def print_mat(h, seg, outfile)
+  CSV.open(outfile, "w") do |csv|
+    name_len = h.keys.max { |s| s.size }.size
+    csv << ["#name", h.keys].flatten
+    h.keys.each do |k1|
+      ary = h.keys.map do |k2|
+        h[k1][k2].nil? ? "" : ('%0.3f'%h[k1][k2][seg])
+      end
+      csv << [k1, ary].flatten
+    end
+  end
+end
+
+class VALVE < Thor
+  class_option :file,
+               :aliases => "-f",
+               :desc => "specifiy a file with paths to prediction files",
+               :require => true
+  class_option :names,
+               :aliases => "-n",
+               :desc => "specifiy a file with names of all the tools",
+               :require => true
+  class_option :type,
+               :aliases => "-y",
+               :banner => "[gene/allele/partition/cdr3]",
+               :desc => "specifies the type of comparison to output",
+               :require => true
+  class_option :output,
+               :aliases => "-o",
+               :desc => "output file comma sepearated, if none, prints to console"
+  #
+  #
+  #
+  desc 'unsupervised [options]',
+       'compare predictions on dataset without labels'
+
+  def unsupervised()
+    raise "no file of names specified" if options["names"].nil?
+    raise "no file of prediction files specified" if options["file"].nil?
+    #
+    pred_files = IO.readlines(options["file"]).map { |v| v.chomp }
+    name_lst = IO.readlines(options["names"]).map { |v| v.chomp }
+    vl = IgValve::EvaluateLabels.new(pred_files, name_lst)
+    h = case options["type"]
+          when "gene"
+            vl.get_gene_similarity()
+          when "allele"
+            vl.get_allele_similarity()
+          when "partition"
+            vl.get_partition_similarity()
+          when "cdr3"
+            #raise "CDR3 is not yet implemented"
+            vl.get_cdr3_similarity()
+          when "clone"
+            #raise 'clone option is not yet implemented'
+            vl.get_clone_similarity()
+          else
+            raise "incorrect type"
+        end
+    if options["output"].nil? then
+      #if options["type"] != "cdr3" then
+      if ["gene", "allele", "partition"].include?(options["type"]) then
+        pretty_print_mat(h, :V)
+        pretty_print_mat(h, :D)
+        pretty_print_mat(h, :J)
+        pretty_print_mat(h, :total)
+      elsif options['type'] == 'clone' then
+        pretty_print_mat(h, :clone)
+      else
+        #raise 'CDR3 is not yet implemented'
+        pretty_print_mat(h, :CDR3)
+      end
+    else
+      #if options["type"] != "cdr3" then
+      if ["gene", "allele", "partition"].include?(options["type"]) then
+        outfile = options["output"].split(/\.csv$/)[0]
+        print_mat(h, :V, outfile + "_V.csv")
+        print_mat(h, :D, outfile + "_D.csv")
+        print_mat(h, :J, outfile + "_J.csv")
+        print_mat(h, :total, outfile + "_total.csv")
+      elsif options['type'] == 'clone' then
+        print_mat(h, :clone, outfile + "clone.csv")
+      else
+        print_mat(h, :CDR3, outfile + "_cdr3.csv")
+      end
+    end
+  end
+
+  #
+  #
+  #
+  desc 'supervised [options]',
+       'compare predictions to simulated dataset with ground-truth'
+  method_option :truth,
+                :aliases => "-t",
+                :desc => "specify file with ground truth",
+                :require => true
+  method_option :pred, :aliases => "-p",
+                :desc => "specify file with predictions"
+
+  def supervised()
+    raise "no truth file specified" if options["truth"].nil?
+    #    
+    #pred_files = IO.readlines(options["file"]).map{|v| v.chomp}
+    #name_lst = IO.readlines(options["names"]).map{|v| v.chomp}
+    pred_files, name_lst =
+        if (options["file"] && options["names"]) then
+          [IO.readlines(options["file"]).map { |v| v.chomp },
+           IO.readlines(options["names"]).map { |v| v.chomp }]
+        elsif options["pred"]
+          [[options["pred"]], [" "]]
+        else
+          raise "either -f and -n OR -p must be specified"
+        end
+    truth_file = options["truth"]
+    #
+    name_len = name_lst.max { |s1, s2| s1.size <=> s2.size }.size
+    if ["gene", "allele", "partition"].include?(options["type"]) then
+      puts [" "*name_len, "V", "D", "J", "total"].join("\t")
+    elsif options["type"] == "cdr3"
+      puts [" "*name_len, 'CDR3'].join("\t")
+    elsif options["type"] == "clone"
+      puts [" "*name_len, 'clone'].join("\t")
+    end
+    #
+    pred_files.each_with_index do |pred_f, i|
+      vl = IgValve::ValidateLabels.new(pred_f, truth_file, ",")
+      h = case options["type"]
+            when "gene"
+              vl.get_gene_accuracy()
+            when "allele"
+              vl.get_allele_accuracy()
+            when "partition"
+              vl.get_partition_accuracy()
+            when "cdr3"
+              vl.get_cdr3_accuracy()
+            when "clone"
+              vl.get_clone_accuracy_2()
+            else
+              raise 'incorrect type specified'
+          end
+      if ["gene", "allele", "partition"].include?(options["type"]) then
+        puts [name_lst[i]+ (" "*(name_len-name_lst[i].size)),
+              [:V, :D, :J, :total].map { |seg| '%0.3f' % h[seg] }].flatten.join("\t")
+      elsif options["type"] == "cdr3"
+        puts [name_lst[i]+ (" "*(name_len-name_lst[i].size)),
+              '%0.3f' % h[:CDR3]].flatten.join("\t")
+      elsif options["type"] == "clone"
+        puts [name_lst[i]+ (" "*(name_len-name_lst[i].size)),
+              '%0.3f' % h[:clone]].flatten.join("\t")
+      end
+    end
+  end
+
+end
+
+VALVE.start(ARGV)
