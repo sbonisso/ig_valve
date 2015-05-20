@@ -246,7 +246,6 @@ module IgValve
     #
     def rand_index(lbl_f1, lbl_f2)
       h = compute_pair_confusion(lbl_f1, lbl_f2)
-      puts h
       {:clone => (h[:a]+h[:b])/(h[:c]+h[:d]+h[:a]+h[:b]).to_f}
     end
     #
