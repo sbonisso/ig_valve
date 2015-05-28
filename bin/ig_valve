@@ -149,7 +149,7 @@ class IGVALVE < Thor
             when "cdr3"
               vl.get_cdr3_accuracy()
             when "clone"
-              vl.get_clone_accuracy_2()
+              vl.get_clone_accuracy()
             else
               raise 'incorrect type specified'
           end

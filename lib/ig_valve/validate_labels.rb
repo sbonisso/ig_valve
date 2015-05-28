@@ -119,48 +119,54 @@ module IgValve
     # compare clones as comparing multisets across the dataset using Tanimoto similarity,
     # T(A,B) = \frac{A \dot B}{|A|^2+|B|^2-A \dot B}
     #
+    # def get_clone_accuracy()
+    #   truth_ms = Multiset.new
+    #   @truth_h.each_key do |k|
+    #     truth_ms.add(@truth_h[k].get_cdr3)
+    #   end
+    #   pred_ms = Multiset.new
+    #   IO.readlines(@pred_file).each do |l|
+    #     num += 1
+    #     pred_lab = LabelPrediction.new(l, @delim)
+    #     pred_ms.add(pred_lab.get_cdr3)
+    #   end
+    #   self.compare_clones(pred_ms, truth_ms)
+    # end
+    #
+    # compute FM index on CDR3 partitions
+    #
     def get_clone_accuracy()
-      truth_ms = Multiset.new
-      @truth_h.each_key do |k|
-        truth_ms.add(@truth_h[k].get_cdr3)
-      end
-      pred_ms = Multiset.new
-      IO.readlines(@pred_file).each do |l|
-        num += 1
-        pred_lab = LabelPrediction.new(l, @delim)
-        pred_ms.add(pred_lab.get_cdr3)
-      end
-      self.compare_clones(pred_ms, truth_ms)
+      fowlkes_mallows_index(@truth_file, @pred_file)
     end
 
     #
     # compute Rand index over cdr3 partitions
     #
-    def get_clone_accuracy_2()
-      a = 0
-      b = 0
-      c = 0
-      d = 0
-      num = 0
-      each_pair_pred do |p1, t1, p2, t2|
-        p_cdr3 = (p1.get_cdr3 == p2.get_cdr3)
-        t_cdr3 = (t1.get_cdr3 == t2.get_cdr3)
-        num += 1
-        if p_cdr3 && t_cdr3 then
-          a += 1
-        elsif !p_cdr3 && !t_cdr3 then
-          b += 1
-        elsif p_cdr3 && !t_cdr3 then
-          c += 0
-        elsif !p_cdr3 && t_cdr3 then
-          d += 0
-        else
-        end
-      end
-      denom = (a + b + c + d).to_f
-      #puts [a, b, c, d, denom, num].join("\t")
-      {:clone => (a+b)/denom}
-    end
+    # def get_clone_accuracy_2()
+    #   a = 0
+    #   b = 0
+    #   c = 0
+    #   d = 0
+    #   num = 0
+    #   each_pair_pred do |p1, t1, p2, t2|
+    #     p_cdr3 = (p1.get_cdr3 == p2.get_cdr3)
+    #     t_cdr3 = (t1.get_cdr3 == t2.get_cdr3)
+    #     num += 1
+    #     if p_cdr3 && t_cdr3 then
+    #       a += 1
+    #     elsif !p_cdr3 && !t_cdr3 then
+    #       b += 1
+    #     elsif p_cdr3 && !t_cdr3 then
+    #       c += 0
+    #     elsif !p_cdr3 && t_cdr3 then
+    #       d += 0
+    #     else
+    #     end
+    #   end
+    #   denom = (a + b + c + d).to_f
+    #   #puts [a, b, c, d, denom, num].join("\t")
+    #   {:clone => (a+b)/denom}
+    # end
 
   end
 
