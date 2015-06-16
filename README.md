@@ -10,6 +10,14 @@ Validates antibody VDJ labeling of reads in either supervised (to simulated grou
 * CDR3 distribution
 * clone distribution
 
+##### Install
+
+Once downloaded, and in the ig_valve directory, to build and install the gem run:
+
+```
+rake install
+```
+
 ##### Use
 
 valve executable contains two subcommands: unsupervised and supervised
